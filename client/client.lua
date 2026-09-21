@@ -5,6 +5,11 @@ local isTransmitting   = false
 local batteryPct       = 100
 local batteryTimer     = nil
 local ownRadioDisplayName = nil
+local radioVolume      = tonumber(GetResourceKvpString('pd_radio_volume')) or (Config.DefaultRadioVolume or 60)
+local radioMuted       = false
+local preMuteVolume    = radioVolume > 0 and radioVolume or (Config.DefaultRadioVolume or 60)
+local savedChannel     = tonumber(GetResourceKvpString('pd_radio_channel'))
+local setChannel
 
 -- ==================================================================
 -- HELPERS
@@ -70,6 +75,40 @@ local function voice_StopRadioTalk()
     end
 end
 
+local function voice_SetRadioVolume(volume)
+    volume = math.max(0, math.min(100, math.floor(tonumber(volume) or 0)))
+    if Config.VoiceResource == 'pma-voice' and GetResourceState('pma-voice') == 'started' then
+        exports['pma-voice']:setRadioVolume(volume)
+    end
+end
+
+local function syncVolumeUI()
+    SendNUIMessage({ action = 'setVolume', value = radioVolume, muted = radioMuted })
+end
+
+local function applyRadioVolume(volume, persist)
+    radioVolume = math.max(0, math.min(100, math.floor(tonumber(volume) or 0)))
+    if radioVolume > 0 then preMuteVolume = radioVolume end
+    radioMuted = radioVolume == 0
+    voice_SetRadioVolume(radioVolume)
+    if persist ~= false then SetResourceKvp('pd_radio_volume', tostring(radioVolume)) end
+    syncVolumeUI()
+end
+
+local function changeRadioVolume(delta)
+    local base = radioMuted and preMuteVolume or radioVolume
+    applyRadioVolume(base + delta, true)
+end
+
+local function toggleRadioMute()
+    if radioMuted or radioVolume == 0 then
+        applyRadioVolume(math.max(1, preMuteVolume), true)
+    else
+        preMuteVolume = radioVolume
+        applyRadioVolume(0, true)
+    end
+end
+
 CreateThread(function()
     Wait(1000)
     if Config.VoiceResource == 'pma-voice' and GetResourceState('pma-voice') == 'started' then
@@ -79,6 +118,7 @@ CreateThread(function()
         if Config.RadioClickOffVolume then
             exports['pma-voice']:setMicClickOffVolume(Config.RadioClickOffVolume)
         end
+        applyRadioVolume(radioVolume, false)
     end
 end)
 
@@ -115,7 +155,13 @@ local function powerOn()
     radioPowered = true
     batteryPct = batteryPct == 0 and 100 or batteryPct
     SendNUIMessage({ action = 'powerState', state = true })
+    syncVolumeUI()
     startBatteryDrain()
+    if savedChannel and getChannelById(savedChannel) then
+        SetTimeout(100, function()
+            if radioPowered and not currentChannel then setChannel(savedChannel) end
+        end)
+    end
 end
 
 local function powerOff()
@@ -136,7 +182,7 @@ RegisterNetEvent('pd_radio:powerOff', powerOff)
 -- CHANNEL MANAGEMENT
 -- ==================================================================
 
-local function setChannel(channelId)
+setChannel = function(channelId)
     local chan = getChannelById(channelId)
     if not chan then return end
 
@@ -153,6 +199,8 @@ RegisterNetEvent('pd_radio:channelGranted', function(channelId)
     local chan = getChannelById(channelId)
     if not chan then return end
     currentChannel = channelId
+    savedChannel = channelId
+    SetResourceKvp('pd_radio_channel', tostring(channelId))
     SendNUIMessage({ action = 'clearReceiving' })
     voice_JoinChannel(channelId)
     SendNUIMessage({
@@ -189,7 +237,9 @@ local function openRadio()
         channels = Config.Channels,
         battery = math.floor(batteryPct),
         powered = radioPowered,
-        currentChannel = currentChannel
+        currentChannel = currentChannel,
+        volume = radioVolume,
+        muted = radioMuted
     })
 end
 
@@ -214,6 +264,18 @@ RegisterCommand('radiochanup', function() cycleChannel(1) end, false)
 RegisterCommand('radiochandown', function() cycleChannel(-1) end, false)
 RegisterKeyMapping('radiochanup', 'Radio Channel Up', 'keyboard', Config.ChannelUpKey)
 RegisterKeyMapping('radiochandown', 'Radio Channel Down', 'keyboard', Config.ChannelDownKey)
+
+-- ==================================================================
+-- RADIO VOLUME / MUTE
+-- Uses pma-voice's radio-only volume export; proximity voice is untouched.
+-- ==================================================================
+
+RegisterCommand('radiovoldown', function() changeRadioVolume(-(Config.RadioVolumeStep or 10)) end, false)
+RegisterCommand('radiovolup', function() changeRadioVolume(Config.RadioVolumeStep or 10) end, false)
+RegisterCommand('radiomute', toggleRadioMute, false)
+RegisterKeyMapping('radiovoldown', 'Police Radio Volume Down', 'keyboard', Config.RadioVolumeDownKey or 'F7')
+RegisterKeyMapping('radiovolup', 'Police Radio Volume Up', 'keyboard', Config.RadioVolumeUpKey or 'F8')
+RegisterKeyMapping('radiomute', 'Police Radio Mute / Unmute', 'keyboard', Config.RadioMuteKey or 'F9')
 
 -- ==================================================================
 -- PUSH TO TALK
@@ -378,8 +440,12 @@ RegisterNUICallback('selectChannel', function(data, cb)
 end)
 
 RegisterNUICallback('volume', function(data, cb)
-    -- Wire this to your voice resource's radio volume export if supported
-    cb('ok')
+    if data and data.mute == true then
+        toggleRadioMute()
+    elseif data and data.value ~= nil then
+        applyRadioVolume(tonumber(data.value) or radioVolume, true)
+    end
+    cb({ ok = true, volume = radioVolume, muted = radioMuted })
 end)
 
 -- ==================================================================

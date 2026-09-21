@@ -16,6 +16,13 @@ Config.VoiceResource = 'pma-voice'
 Config.OpenRadioKey   = 'M'          -- toggle the radio UI
 Config.PTTKey         = 'LMENU'      -- push-to-talk (default: left alt)
 
+-- Radio-only volume controls (pma-voice). These do not change proximity voice.
+Config.DefaultRadioVolume = 60
+Config.RadioVolumeStep = 10
+Config.RadioVolumeDownKey = 'F7'
+Config.RadioVolumeUpKey   = 'F8'
+Config.RadioMuteKey       = 'F9'
+
 -- =========================================================
 -- PTT RADIO ANIMATION
 -- =========================================================

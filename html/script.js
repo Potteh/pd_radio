@@ -16,6 +16,9 @@
   const pttOffAudio = new Audio('sounds/ptt_off.wav');
   const receiving   = new Map();
   const micLed      = document.getElementById('mic-led');
+  const volumeMeter = document.getElementById('volume-meter');
+  const volumeValue = document.getElementById('volume-value');
+  const muteBadge   = document.getElementById('mute-badge');
   const btnGrid     = document.getElementById('btn-grid');
   const powerBtn    = document.getElementById('power-btn');
   const closeBtn    = document.getElementById('close-btn');
@@ -85,12 +88,23 @@
     updateConnectionStatus();
   }
 
+  function setVolumeDisplay(value, muted) {
+    const vol = Math.max(0, Math.min(100, Number(value ?? 60)));
+    volumeValue.textContent = `${Math.round(vol)}%`;
+    muteBadge.classList.toggle('on', !!muted || vol === 0);
+    const activeBars = Math.ceil(vol / 20);
+    Array.from(volumeMeter.querySelectorAll('i')).forEach((bar, idx) => {
+      bar.classList.toggle('on', !muted && idx < activeBars);
+    });
+  }
+
   window.addEventListener('message', (event) => {
     const data = event.data;
     switch (data.action) {
       case 'open':
         channels = data.channels || [];
         batteryFill.style.width = (data.battery ?? 100) + '%';
+        setVolumeDisplay(data.volume ?? 60, !!data.muted);
         setPowered(!!data.powered);
         if (data.currentChannel != null) {
           const active = channels.find((c) => Number(c.id) === Number(data.currentChannel));
@@ -117,6 +131,10 @@
         batteryFill.style.background = data.value <= 15 ? '#ff4d3d' : '';
         break;
 
+
+      case 'setVolume':
+        setVolumeDisplay(data.value, !!data.muted);
+        break;
 
       case 'playPTTSound': {
         const audio = data.sound === 'on' ? pttOnAudio : pttOffAudio;

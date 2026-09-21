@@ -433,6 +433,29 @@ html, body {
   box-shadow: 0 0 8px var(--lcd-green);
 }
 
+
+.volume-cluster {
+  min-width: 72px;
+  height: 34px;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  grid-template-rows: 15px 15px;
+  align-items: center;
+  column-gap: 4px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #17191a;
+  border: 1px solid #0c0d0e;
+  box-shadow: inset 0 0 4px rgba(0,0,0,.7);
+}
+.volume-label, .volume-value { font-size: 7px; color: #777d80; letter-spacing: .06em; }
+.volume-value { text-align: right; }
+.volume-meter { display: flex; gap: 2px; justify-content: flex-end; }
+.volume-meter i { width: 3px; height: 8px; border-radius: 1px; background: #29302a; }
+.volume-meter i.on { background: var(--lcd-green); box-shadow: 0 0 3px rgba(104,255,126,.45); }
+.mute-badge { grid-column: 1 / 3; font-size: 7px; text-align: center; color: #6a4a4a; letter-spacing: .12em; opacity: .35; }
+.mute-badge.on { color: #ff5b4d; opacity: 1; text-shadow: 0 0 4px rgba(255,91,77,.5); }
+
 /* ================= BRAND PLATE ================= */
 
 .brand-plate {
