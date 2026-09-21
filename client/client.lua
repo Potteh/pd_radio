@@ -345,3 +345,35 @@ RegisterNUICallback('volume', function(data, cb)
     -- Wire this to your voice resource's radio volume export if supported
     cb('ok')
 end)
+
+-- ==================================================================
+-- EMERGENCY / PANIC
+-- Does not modify the working PTT path.
+-- ==================================================================
+local panicCooldown = false
+
+local function triggerPanic()
+    if panicCooldown or not radioPowered or not currentChannel then return end
+    panicCooldown = true
+    TriggerServerEvent('pd_radio:panic')
+    SetTimeout(2500, function() panicCooldown = false end)
+end
+
+RegisterCommand('radiopanic', triggerPanic, false)
+RegisterKeyMapping('radiopanic', 'Police Radio Emergency / Panic', 'keyboard', Config.EmergencyKey or 'F10')
+
+RegisterNetEvent('pd_radio:panicAlert', function(serverId, displayName)
+    if not radioPowered then return end
+    PlaySoundFrontend(-1, Config.EmergencySoundName or 'TIMER_STOP', Config.EmergencySoundSet or 'HUD_MINI_GAME_SOUNDSET', true)
+    SendNUIMessage({
+        action = 'panicAlert',
+        serverId = tonumber(serverId),
+        name = displayName or ('UNIT ' .. tostring(serverId)),
+        duration = Config.EmergencyDuration or 8000
+    })
+end)
+
+RegisterNUICallback('panic', function(_, cb)
+    triggerPanic()
+    cb({ ok = true })
+end)

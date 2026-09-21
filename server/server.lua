@@ -149,3 +149,30 @@ RegisterNetEvent('pd_radio:stopTalking', function(channelId)
         end
     end
 end)
+
+-- ==================================================================
+-- EMERGENCY / PANIC ALERT
+-- Broadcasts to every player currently registered on a pd_radio channel.
+-- ==================================================================
+RegisterNetEvent('pd_radio:panic', function()
+    local src = source
+    local ok = hasRadioAccess(src)
+    if not ok then return end
+
+    local senderOnRadio = false
+    for _, list in pairs(playersOnChannel) do
+        if list[src] then senderOnRadio = true break end
+    end
+    if not senderOnRadio then return end
+
+    local displayName = GetCharacterDisplayName(src)
+    local sent = {}
+    for _, list in pairs(playersOnChannel) do
+        for target, _ in pairs(list) do
+            if not sent[target] then
+                sent[target] = true
+                TriggerClientEvent('pd_radio:panicAlert', target, src, displayName)
+            end
+        end
+    end
+end)

@@ -466,3 +466,9 @@ html, body {
   backdrop-filter: blur(2px);
 }
 .ptt-hint b { color: var(--lcd-amber); }
+
+/* Phase 5 emergency/panic banner */
+.panic-alert { display:none; margin:4px 8px; padding:5px 7px; border:1px solid #ff5a45; background:rgba(105,0,0,.88); color:#fff; font-size:11px; font-weight:700; letter-spacing:.5px; text-align:center; animation:panicPulse .65s infinite alternate; }
+.panic-alert.on { display:flex; align-items:center; justify-content:center; gap:7px; }
+.panic-label { color:#ffd1ca; }
+@keyframes panicPulse { from { opacity:.68; } to { opacity:1; } }

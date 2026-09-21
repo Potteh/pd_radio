@@ -18,6 +18,10 @@
   const btnGrid     = document.getElementById('btn-grid');
   const powerBtn    = document.getElementById('power-btn');
   const closeBtn    = document.getElementById('close-btn');
+  const emergencyBtn = document.getElementById('emergency-btn');
+  const panicAlert = document.getElementById('panic-alert');
+  const panicName = document.getElementById('panic-name');
+  let panicTimer = null;
 
   let channels = [];
   let currentChannelId = null;
@@ -119,6 +123,13 @@
         break;
       }
 
+      case 'panicAlert':
+        if (panicTimer) clearTimeout(panicTimer);
+        panicName.textContent = data.name || 'UNIT';
+        panicAlert.classList.add('on');
+        panicTimer = setTimeout(() => panicAlert.classList.remove('on'), Number(data.duration || 8000));
+        break;
+
       case 'setTransmitting':
         txBar.classList.toggle('on', !!data.state);
         micLed.classList.toggle('live', !!data.state);
@@ -127,6 +138,7 @@
     }
   });
 
+  emergencyBtn.addEventListener('click', () => post('panic'));
   powerBtn.addEventListener('click', () => post('power'));
   closeBtn.addEventListener('click', () => post('close'));
 

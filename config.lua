@@ -62,3 +62,12 @@ Config.BatteryLifeMinutes = 90
 -- WITHOUT being on the radio channel (i.e. face-to-face radio chatter
 -- bleeding out of the speaker). Set to 0 to disable.
 Config.SpeakerBleedRange = 3.0
+
+-- =========================================================
+-- EMERGENCY / PANIC
+-- =========================================================
+Config.EmergencyKey = 'F10'
+Config.EmergencyDuration = 8000 -- milliseconds
+-- Native GTA frontend sound: reliable even when NUI is not focused.
+Config.EmergencySoundName = 'TIMER_STOP'
+Config.EmergencySoundSet = 'HUD_MINI_GAME_SOUNDSET'
