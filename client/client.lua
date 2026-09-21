@@ -44,13 +44,36 @@ local function voice_LeaveChannel()
 end
 
 local function voice_SetTransmitting(state)
-    -- Most voice resources auto-detect PTT via the key itself and just
-    -- need to know which channel you're in (handled above). This hook
-    -- exists for resources that need an explicit "start/stop talking"
-    -- call, and it's also used here to drive the on-screen PTT light.
     isTransmitting = state
     SendNUIMessage({ action = 'setTransmitting', state = state })
 end
+
+-- Let pma-voice handle the actual radio transmission. Its +radiotalk /
+-- -radiotalk commands update Mumble voice targets and also play pma-voice's
+-- built-in mic click/squelch sounds.
+local function voice_StartRadioTalk()
+    if Config.VoiceResource == 'pma-voice' then
+        ExecuteCommand('+radiotalk')
+    end
+end
+
+local function voice_StopRadioTalk()
+    if Config.VoiceResource == 'pma-voice' then
+        ExecuteCommand('-radiotalk')
+    end
+end
+
+CreateThread(function()
+    Wait(1000)
+    if Config.VoiceResource == 'pma-voice' and GetResourceState('pma-voice') == 'started' then
+        if Config.RadioClickOnVolume then
+            exports['pma-voice']:setMicClickOnVolume(Config.RadioClickOnVolume)
+        end
+        if Config.RadioClickOffVolume then
+            exports['pma-voice']:setMicClickOffVolume(Config.RadioClickOffVolume)
+        end
+    end
+end)
 
 -- ==================================================================
 -- RADIO POWER / BATTERY
@@ -187,12 +210,14 @@ RegisterKeyMapping('radiochandown', 'Radio Channel Down', 'keyboard', Config.Cha
 
 RegisterCommand('+radioptt', function()
     if not radioPowered or not currentChannel then return end
+    voice_StartRadioTalk()
     voice_SetTransmitting(true)
     TriggerServerEvent('pd_radio:startTalking', currentChannel)
 end, false)
 
 RegisterCommand('-radioptt', function()
     if not isTransmitting then return end
+    voice_StopRadioTalk()
     voice_SetTransmitting(false)
     TriggerServerEvent('pd_radio:stopTalking', currentChannel)
 end, false)

@@ -15,6 +15,11 @@ Config.VoiceResource = 'pma-voice'
 -- =========================================================
 Config.OpenRadioKey   = 'M'          -- toggle the radio UI
 Config.PTTKey         = 'LMENU'      -- push-to-talk (default: left alt)
+
+-- pma-voice's built-in radio mic click / squelch volume (0-100).
+-- These sounds play when radio transmission starts and stops.
+Config.RadioClickOnVolume  = 60
+Config.RadioClickOffVolume = 60
 Config.ChannelUpKey   = 'PAGEUP'
 Config.ChannelDownKey = 'PAGEDOWN'
 
