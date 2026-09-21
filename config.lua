@@ -18,13 +18,13 @@ Config.PTTKey         = 'LMENU'      -- push-to-talk (default: left alt)
 
 -- pma-voice's built-in radio mic click / squelch volume (0-100).
 -- These sounds play when radio transmission starts and stops.
-Config.RadioClickOnVolume  = 60
-Config.RadioClickOffVolume = 60
+Config.RadioClickOnVolume  = 0
+Config.RadioClickOffVolume = 0
 
 -- Custom Motorola-style PTT tones generated for this resource.
 -- Set false to go back to pma-voice's built-in mic clicks.
-Config.CustomPTTSounds = false
-Config.CustomPTTVolume = 0.55
+Config.CustomPTTSounds = true
+Config.CustomPTTVolume = 0.65
 Config.ChannelUpKey   = 'PAGEUP'
 Config.ChannelDownKey = 'PAGEDOWN'
 
