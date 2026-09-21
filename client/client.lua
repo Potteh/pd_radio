@@ -218,17 +218,6 @@ RegisterCommand('+radioptt', function()
         SendNUIMessage({ action = 'playPTTSound', sound = 'on', volume = Config.CustomPTTVolume or 0.55 })
     end
     voice_SetTransmitting(true)
-
-    -- Show our own transmission in the RX display as well.
-    local myServerId = GetPlayerServerId(PlayerId())
-    local myName = GetPlayerName(PlayerId()) or ('UNIT ' .. tostring(myServerId))
-    SendNUIMessage({
-        action = 'setReceiving',
-        serverId = myServerId,
-        name = myName,
-        state = true
-    })
-
     TriggerServerEvent('pd_radio:startTalking', currentChannel)
 end, false)
 
@@ -239,18 +228,26 @@ RegisterCommand('-radioptt', function()
         SendNUIMessage({ action = 'playPTTSound', sound = 'off', volume = Config.CustomPTTVolume or 0.55 })
     end
     voice_SetTransmitting(false)
-
-    -- Remove only our own entry from RX; any other active receiver stays shown.
-    SendNUIMessage({
-        action = 'setReceiving',
-        serverId = GetPlayerServerId(PlayerId()),
-        state = false
-    })
-
     TriggerServerEvent('pd_radio:stopTalking', currentChannel)
 end, false)
 
 RegisterKeyMapping('+radioptt', 'Radio Push-To-Talk', 'keyboard', Config.PTTKey)
+
+-- Show the local player's own successful pma-voice transmission in the RX display.
+-- IMPORTANT: this only observes pma-voice:radioActive; it does not alter the working PTT path.
+AddEventHandler('pma-voice:radioActive', function(state)
+    if not radioPowered or not currentChannel then return end
+
+    local serverId = GetPlayerServerId(PlayerId())
+    local displayName = GetPlayerName(PlayerId()) or ('UNIT %s'):format(serverId)
+
+    SendNUIMessage({
+        action = 'setReceiving',
+        serverId = serverId,
+        name = displayName,
+        state = state == true
+    })
+end)
 
 
 -- RX is driven directly by pma-voice's own synchronized talking event.
