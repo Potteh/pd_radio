@@ -76,6 +76,33 @@ RegisterNetEvent('pd_radio:leaveChannel', function()
 end)
 
 
+
+-- Resolve a QBCore character name for the RX display.
+-- Falls back to the FiveM name only if QBCore/character data is unavailable.
+local function GetCharacterDisplayName(src)
+    local ok, QBCore = pcall(function()
+        return exports['qb-core']:GetCoreObject()
+    end)
+    if ok and QBCore then
+        local Player = QBCore.Functions.GetPlayer(tonumber(src))
+        local charinfo = Player and Player.PlayerData and Player.PlayerData.charinfo
+        if charinfo then
+            local first = tostring(charinfo.firstname or '')
+            local last = tostring(charinfo.lastname or '')
+            local full = (first .. ' ' .. last):gsub('^%s+', ''):gsub('%s+$', '')
+            if full ~= '' then return full end
+        end
+    end
+    return GetPlayerName(tonumber(src)) or ('UNIT ' .. tostring(src))
+end
+
+RegisterNetEvent('pd_radio:requestRxName', function(talkingServerId, state)
+    local requester = source
+    talkingServerId = tonumber(talkingServerId)
+    if not talkingServerId then return end
+    TriggerClientEvent('pd_radio:resolvedRxName', requester, talkingServerId, GetCharacterDisplayName(talkingServerId), state == true)
+end)
+
 -- ==================================================================
 -- SPEAKER BLEED (optional flavor: nearby non-channel players hear
 -- radio chatter faintly coming from the speaker on someone's belt)
@@ -87,7 +114,7 @@ RegisterNetEvent('pd_radio:startTalking', function(channelId)
     if not list then return end
 
     local srcNet = NetworkGetNetworkIdFromEntity(GetPlayerPed(src))
-    local displayName = GetPlayerName(src) or ('UNIT ' .. tostring(src))
+    local displayName = GetCharacterDisplayName(src)
     for target, _ in pairs(list) do
         if target ~= src then
             TriggerClientEvent('pd_radio:rxState', target, src, displayName, true)
@@ -107,7 +134,7 @@ RegisterNetEvent('pd_radio:stopTalking', function(channelId)
     if not list then return end
 
     local srcNet = NetworkGetNetworkIdFromEntity(GetPlayerPed(src))
-    local displayName = GetPlayerName(src) or ('UNIT ' .. tostring(src))
+    local displayName = GetCharacterDisplayName(src)
     for target, _ in pairs(list) do
         if target ~= src then
             TriggerClientEvent('pd_radio:rxState', target, src, displayName, false)

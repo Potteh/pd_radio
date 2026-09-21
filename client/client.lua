@@ -233,53 +233,73 @@ end, false)
 
 RegisterKeyMapping('+radioptt', 'Radio Push-To-Talk', 'keyboard', Config.PTTKey)
 
--- Show the local player's own successful pma-voice transmission in the RX display.
--- IMPORTANT: this only observes pma-voice:radioActive; it does not alter the working PTT path.
-AddEventHandler('pma-voice:radioActive', function(state)
+-- RX display names are resolved server-side from QBCore character data.
+-- This observes pma-voice only; the working PTT/key-up path above is unchanged.
+local rxNameCache = {}
+
+local function updateRxWithCharacterName(serverId, state)
+    serverId = tonumber(serverId)
+    if not serverId then return end
+
+    if state ~= true then
+        SendNUIMessage({
+            action = 'setReceiving',
+            serverId = serverId,
+            name = rxNameCache[serverId] or ('UNIT %s'):format(serverId),
+            state = false
+        })
+        return
+    end
+
+    if rxNameCache[serverId] then
+        SendNUIMessage({
+            action = 'setReceiving',
+            serverId = serverId,
+            name = rxNameCache[serverId],
+            state = true
+        })
+    else
+        TriggerServerEvent('pd_radio:requestRxName', serverId, true)
+    end
+end
+
+RegisterNetEvent('pd_radio:resolvedRxName', function(serverId, displayName, state)
+    serverId = tonumber(serverId)
+    if not serverId then return end
+    if displayName and displayName ~= '' then rxNameCache[serverId] = displayName end
     if not radioPowered or not currentChannel then return end
-
-    local serverId = GetPlayerServerId(PlayerId())
-    local displayName = GetPlayerName(PlayerId()) or ('UNIT %s'):format(serverId)
-
     SendNUIMessage({
         action = 'setReceiving',
         serverId = serverId,
-        name = displayName,
+        name = rxNameCache[serverId] or ('UNIT %s'):format(serverId),
         state = state == true
     })
 end)
 
+-- Show our own successful transmission in RX using our QBCore character name.
+AddEventHandler('pma-voice:radioActive', function(state)
+    if not radioPowered or not currentChannel then return end
+    updateRxWithCharacterName(GetPlayerServerId(PlayerId()), state == true)
+end)
 
--- RX is driven directly by pma-voice's own synchronized talking event.
--- This is more reliable than maintaining a second radio-member table in pd_radio.
+-- Show other transmitters using their QBCore character names.
 RegisterNetEvent('pma-voice:setTalkingOnRadio', function(serverId, state)
     serverId = tonumber(serverId)
     if not serverId or serverId == GetPlayerServerId(PlayerId()) then return end
     if not radioPowered or not currentChannel then return end
-
-    local displayName = ('UNIT %s'):format(serverId)
-    local playerIndex = GetPlayerFromServerId(serverId)
-    if playerIndex and playerIndex ~= -1 then
-        local name = GetPlayerName(playerIndex)
-        if name and name ~= '' then displayName = name end
-    end
-
-    SendNUIMessage({
-        action = 'setReceiving',
-        serverId = serverId,
-        name = displayName,
-        state = state == true
-    })
+    updateRxWithCharacterName(serverId, state == true)
 end)
 
--- Legacy fallback for pd_radio's own server relay.
+-- Legacy fallback for pd_radio's own server relay. Server now supplies character names too.
 RegisterNetEvent('pd_radio:rxState', function(serverId, displayName, state)
-    if not radioPowered or not currentChannel then return end
+    serverId = tonumber(serverId)
+    if not serverId or not radioPowered or not currentChannel then return end
+    if displayName and displayName ~= '' then rxNameCache[serverId] = displayName end
     SendNUIMessage({
         action = 'setReceiving',
         serverId = serverId,
-        name = displayName or ('UNIT ' .. tostring(serverId)),
-        state = state
+        name = rxNameCache[serverId] or displayName or ('UNIT ' .. tostring(serverId)),
+        state = state == true
     })
 end)
 
