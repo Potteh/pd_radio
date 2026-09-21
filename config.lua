@@ -51,10 +51,7 @@ Config.ChannelDownKey = 'PAGEDOWN'
 -- Framework-agnostic: implement GetPlayerJob() server-side
 -- (server/server.lua) to match your framework (ESX/QBCore/custom).
 Config.AllowedJobs = {
-    ['police']    = true,
-    ['sheriff']   = true,
-    ['ambulance'] = true,
-    ['dispatch']  = true,
+    ['police'] = true,
 }
 
 -- =========================================================

@@ -4,20 +4,11 @@
 -- It must return a job name string (e.g. 'police') for the given
 -- server id, or nil if the player has no job / isn't in a framework.
 -- ==================================================================
+local QBCore = exports['qb-core']:GetCoreObject()
+
 local function GetPlayerJob(src)
-    -- ---- QBCore example ----
-    -- local QBCore = exports['qb-core']:GetCoreObject()
-    -- local Player = QBCore.Functions.GetPlayer(src)
-    -- return Player and Player.PlayerData.job.name or nil
-
-    -- ---- ESX example ----
-    -- local ESX = exports['es_extended']:getSharedObject()
-    -- local xPlayer = ESX.GetPlayerFromId(src)
-    -- return xPlayer and xPlayer.job.name or nil
-
-    -- Default fallback: everyone can use the radio (no job gating).
-    -- Swap this out before going live with a real framework check.
-    return 'police'
+    local Player = QBCore.Functions.GetPlayer(src)
+    return Player and Player.PlayerData and Player.PlayerData.job and Player.PlayerData.job.name or nil
 end
 
 local function hasRadioAccess(src)
