@@ -84,8 +84,10 @@ RegisterNetEvent('pd_radio:startTalking', function(channelId)
     if not list then return end
 
     local srcNet = NetworkGetNetworkIdFromEntity(GetPlayerPed(src))
+    local displayName = GetPlayerName(src) or ('UNIT ' .. tostring(src))
     for target, _ in pairs(list) do
         if target ~= src then
+            TriggerClientEvent('pd_radio:rxState', target, src, displayName, true)
             -- The actual "am I close enough" distance check should be
             -- done client-side (or here with player coords) before
             -- playing any bleed audio; this just relays the event.
@@ -100,6 +102,7 @@ RegisterNetEvent('pd_radio:stopTalking', function(channelId)
     if not list then return end
 
     local srcNet = NetworkGetNetworkIdFromEntity(GetPlayerPed(src))
+    local displayName = GetPlayerName(src) or ('UNIT ' .. tostring(src))
     for target, _ in pairs(list) do
         if target ~= src then
             TriggerClientEvent('pd_radio:speakerBleed', target, srcNet, false)

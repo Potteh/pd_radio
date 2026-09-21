@@ -211,6 +211,9 @@ RegisterKeyMapping('radiochandown', 'Radio Channel Down', 'keyboard', Config.Cha
 RegisterCommand('+radioptt', function()
     if not radioPowered or not currentChannel then return end
     voice_StartRadioTalk()
+    if Config.CustomPTTSounds then
+        SendNUIMessage({ action = 'playPTTSound', sound = 'on', volume = Config.CustomPTTVolume or 0.55 })
+    end
     voice_SetTransmitting(true)
     TriggerServerEvent('pd_radio:startTalking', currentChannel)
 end, false)
@@ -218,11 +221,26 @@ end, false)
 RegisterCommand('-radioptt', function()
     if not isTransmitting then return end
     voice_StopRadioTalk()
+    if Config.CustomPTTSounds then
+        SendNUIMessage({ action = 'playPTTSound', sound = 'off', volume = Config.CustomPTTVolume or 0.55 })
+    end
     voice_SetTransmitting(false)
     TriggerServerEvent('pd_radio:stopTalking', currentChannel)
 end, false)
 
 RegisterKeyMapping('+radioptt', 'Radio Push-To-Talk', 'keyboard', Config.PTTKey)
+
+
+-- Show who is transmitting on the current radio channel.
+RegisterNetEvent('pd_radio:rxState', function(serverId, displayName, state)
+    if not radioPowered or not currentChannel then return end
+    SendNUIMessage({
+        action = 'setReceiving',
+        serverId = serverId,
+        name = displayName or ('UNIT ' .. tostring(serverId)),
+        state = state
+    })
+end)
 
 -- Server tells nearby players (not on channel) that radio chatter is
 -- bleeding out of someone's speaker, for the "hear it from their hip" effect

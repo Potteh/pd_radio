@@ -8,6 +8,11 @@
   const signalBars  = document.getElementById('signal-bars');
   const batteryFill = document.getElementById('battery-fill');
   const txBar       = document.getElementById('tx-bar');
+  const rxBar       = document.getElementById('rx-bar');
+  const rxText      = document.getElementById('rx-text');
+  const pttOnAudio  = new Audio('sounds/ptt_on.wav');
+  const pttOffAudio = new Audio('sounds/ptt_off.wav');
+  const receiving   = new Map();
   const micLed      = document.getElementById('mic-led');
   const btnGrid     = document.getElementById('btn-grid');
   const powerBtn    = document.getElementById('power-btn');
@@ -55,6 +60,8 @@
     if (!state) {
       txBar.classList.remove('on');
       micLed.classList.remove('live');
+      rxBar.classList.remove('on');
+      receiving.clear();
     }
   }
 
@@ -85,6 +92,25 @@
         batteryFill.style.width = Math.max(0, Math.min(100, data.value)) + '%';
         batteryFill.style.background = data.value <= 15 ? '#ff4d3d' : '';
         break;
+
+
+      case 'playPTTSound': {
+        const audio = data.sound === 'on' ? pttOnAudio : pttOffAudio;
+        audio.volume = Math.max(0, Math.min(1, Number(data.volume ?? 0.55)));
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+        break;
+      }
+
+      case 'setReceiving': {
+        const id = String(data.serverId);
+        if (data.state) receiving.set(id, data.name || `UNIT ${id}`);
+        else receiving.delete(id);
+        const names = Array.from(receiving.values());
+        rxBar.classList.toggle('on', names.length > 0);
+        rxText.textContent = names.length ? `RX: ${names[names.length - 1]}` : 'RECEIVING';
+        break;
+      }
 
       case 'setTransmitting':
         txBar.classList.toggle('on', !!data.state);
