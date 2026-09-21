@@ -115,8 +115,10 @@ local function powerOff()
     radioPowered = false
     if currentChannel then
         voice_LeaveChannel()
+        TriggerServerEvent('pd_radio:leaveChannel')
         currentChannel = nil
     end
+    SendNUIMessage({ action = 'clearReceiving' })
     SendNUIMessage({ action = 'powerState', state = false })
     stopBatteryDrain()
 end
@@ -144,6 +146,7 @@ RegisterNetEvent('pd_radio:channelGranted', function(channelId)
     local chan = getChannelById(channelId)
     if not chan then return end
     currentChannel = channelId
+    SendNUIMessage({ action = 'clearReceiving' })
     voice_JoinChannel(channelId)
     SendNUIMessage({
         action = 'setChannel',

@@ -70,6 +70,11 @@ end)
 AddEventHandler('playerDropped', function()
     removeFromAllChannels(source)
 end)
+RegisterNetEvent('pd_radio:leaveChannel', function()
+    local src = source
+    removeFromAllChannels(src)
+end)
+
 
 -- ==================================================================
 -- SPEAKER BLEED (optional flavor: nearby non-channel players hear
@@ -78,8 +83,6 @@ end)
 
 RegisterNetEvent('pd_radio:startTalking', function(channelId)
     local src = source
-    if Config.SpeakerBleedRange <= 0 then return end
-
     local list = playersOnChannel[tonumber(channelId)]
     if not list then return end
 
@@ -91,7 +94,9 @@ RegisterNetEvent('pd_radio:startTalking', function(channelId)
             -- The actual "am I close enough" distance check should be
             -- done client-side (or here with player coords) before
             -- playing any bleed audio; this just relays the event.
-            TriggerClientEvent('pd_radio:speakerBleed', target, srcNet, true)
+            if Config.SpeakerBleedRange > 0 then
+                TriggerClientEvent('pd_radio:speakerBleed', target, srcNet, true)
+            end
         end
     end
 end)
@@ -105,7 +110,10 @@ RegisterNetEvent('pd_radio:stopTalking', function(channelId)
     local displayName = GetPlayerName(src) or ('UNIT ' .. tostring(src))
     for target, _ in pairs(list) do
         if target ~= src then
-            TriggerClientEvent('pd_radio:speakerBleed', target, srcNet, false)
+            TriggerClientEvent('pd_radio:rxState', target, src, displayName, false)
+            if Config.SpeakerBleedRange > 0 then
+                TriggerClientEvent('pd_radio:speakerBleed', target, srcNet, false)
+            end
         end
     end
 end)

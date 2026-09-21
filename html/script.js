@@ -102,6 +102,12 @@
         break;
       }
 
+      case 'clearReceiving':
+        receiving.clear();
+        rxBar.classList.remove('on');
+        rxText.textContent = 'RECEIVING';
+        break;
+
       case 'setReceiving': {
         const id = String(data.serverId);
         if (data.state) receiving.set(id, data.name || `UNIT ${id}`);
