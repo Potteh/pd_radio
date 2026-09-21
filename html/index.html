@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>PD Radio</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="radio-wrap" class="hidden">
+  <div id="radio">
+
+    <!-- antenna -->
+    <div class="antenna"></div>
+
+    <!-- top row: emergency button + channel knob -->
+    <div class="top-row">
+      <button id="emergency-btn" class="emg" title="Emergency">
+        <span class="emg-dot"></span>
+      </button>
+
+      <div class="knob-cluster">
+        <div class="knob" id="knob"></div>
+        <div class="knob-ticks"></div>
+      </div>
+    </div>
+
+    <!-- LCD screen -->
+    <div class="screen-bezel">
+      <div class="screen" id="screen">
+
+        <div class="screen-statusbar">
+          <div class="status-left">
+            <span class="icon lock" id="lock-icon">&#128274;</span>
+            <span class="label-mini" id="zone-label">ZONE A</span>
+          </div>
+          <div class="status-right">
+            <span class="bars" id="signal-bars">
+              <i></i><i></i><i></i><i></i>
+            </span>
+            <span class="battery" id="battery-icon">
+              <span class="battery-fill" id="battery-fill"></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="screen-main">
+          <div class="chan-number" id="chan-number">--</div>
+          <div class="chan-name" id="chan-name">NO CHANNEL</div>
+          <div class="chan-freq" id="chan-freq">000.000 MHz</div>
+        </div>
+
+        <div class="tx-bar" id="tx-bar">
+          <span class="tx-dot"></span>
+          <span class="tx-text">TRANSMITTING</span>
+        </div>
+
+        <div class="power-off-msg" id="power-off-msg">RADIO OFF</div>
+      </div>
+
+      <div class="screen-glass-glare"></div>
+    </div>
+
+    <!-- speaker grille -->
+    <div class="speaker-grille">
+      <div class="grille-holes"></div>
+    </div>
+
+    <!-- channel quick-select buttons -->
+    <div class="btn-grid" id="btn-grid"><!-- populated by JS --></div>
+
+    <!-- bottom controls -->
+    <div class="bottom-row">
+      <button id="power-btn" class="pwr-btn" title="Power">
+        <span class="pwr-icon">&#9211;</span>
+      </button>
+      <div class="mic" id="mic-body">
+        <span class="mic-led" id="mic-led"></span>
+      </div>
+      <button id="close-btn" class="close-btn" title="Close">&#10005;</button>
+    </div>
+
+    <div class="brand-plate">
+      <span class="brand-name">APX&nbsp;8000</span>
+      <span class="brand-sub">P25 &middot; TRUNKED</span>
+    </div>
+
+  </div>
+
+  <div class="ptt-hint" id="ptt-hint">HOLD <b>LEFT ALT</b> TO TALK</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
