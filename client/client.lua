@@ -188,7 +188,8 @@ local function openRadio()
         action = 'open',
         channels = Config.Channels,
         battery = math.floor(batteryPct),
-        powered = radioPowered
+        powered = radioPowered,
+        currentChannel = currentChannel
     })
 end
 

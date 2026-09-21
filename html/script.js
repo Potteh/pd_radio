@@ -6,6 +6,7 @@
   const chanFreq    = document.getElementById('chan-freq');
   const lockIcon    = document.getElementById('lock-icon');
   const signalBars  = document.getElementById('signal-bars');
+  const connStatus  = document.getElementById('conn-status');
   const batteryFill = document.getElementById('battery-fill');
   const txBar       = document.getElementById('tx-bar');
   const txText      = document.getElementById('tx-text');
@@ -49,6 +50,14 @@
     });
   }
 
+  function updateConnectionStatus() {
+    const connected = powered && currentChannelId !== null;
+    connStatus.classList.toggle('connected', connected);
+    connStatus.classList.toggle('offline', !connected);
+    connStatus.querySelector('span').textContent = connected ? 'CONNECTED' : 'OFFLINE';
+    signalBars.classList.toggle('active', connected);
+  }
+
   function setChannelDisplay(c) {
     currentChannelId = c.id;
     chanNumber.textContent = 'CH ' + String(c.id).padStart(2, '0');
@@ -56,18 +65,24 @@
     chanFreq.textContent = c.freq + ' MHz';
     lockIcon.classList.toggle('active', !!c.encrypted);
     renderChannelButtons();
+    updateConnectionStatus();
   }
 
   function setPowered(state) {
     powered = state;
     screen.classList.toggle('off', !state);
-    signalBars.classList.toggle('active', state);
+    updateConnectionStatus();
     if (!state) {
       txBar.classList.remove('on');
       micLed.classList.remove('live');
       rxBar.classList.remove('on');
       receiving.clear();
+      currentChannelId = null;
+      chanNumber.textContent = '--';
+      chanName.textContent = 'NO CHANNEL';
+      chanFreq.textContent = '000.000 MHz';
     }
+    updateConnectionStatus();
   }
 
   window.addEventListener('message', (event) => {
@@ -77,6 +92,10 @@
         channels = data.channels || [];
         batteryFill.style.width = (data.battery ?? 100) + '%';
         setPowered(!!data.powered);
+        if (data.currentChannel != null) {
+          const active = channels.find((c) => Number(c.id) === Number(data.currentChannel));
+          if (active) setChannelDisplay(active);
+        }
         renderChannelButtons();
         wrap.classList.remove('hidden');
         break;
@@ -119,7 +138,13 @@
         else receiving.delete(id);
         const names = Array.from(receiving.values());
         rxBar.classList.toggle('on', names.length > 0);
-        rxText.textContent = names.length ? `RX: ${names.join('  •  ')}` : 'RECEIVING';
+        if (!names.length) {
+          rxText.textContent = 'RX';
+        } else if (names.length === 1) {
+          rxText.textContent = `RX  ${names[0]}`;
+        } else {
+          rxText.textContent = `RX ${names.length}  ${names.join(' • ')}`;
+        }
         break;
       }
 
@@ -133,7 +158,7 @@
       case 'setTransmitting':
         txBar.classList.toggle('on', !!data.state);
         micLed.classList.toggle('live', !!data.state);
-        txText.textContent = data.state && data.name ? `TX: ${data.name}` : 'TRANSMITTING';
+        txText.textContent = data.state && data.name ? `TX  ${data.name}` : 'TX';
         break;
     }
   });
