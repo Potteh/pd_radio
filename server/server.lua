@@ -93,6 +93,12 @@ local function GetCharacterDisplayName(src)
             local full = (first .. ' ' .. last):gsub('^%s+', ''):gsub('%s+$', '')
             local metadata = pdata.metadata or {}
             local callsign = tostring(metadata.callsign or ''):gsub('^%s+', ''):gsub('%s+$', '')
+            -- Some QBCore/MDT setups store a placeholder instead of an empty callsign.
+            -- Treat those placeholders as unset so the radio only shows the character name.
+            local normalizedCallsign = callsign:lower():gsub('[%s%-%_]+', '')
+            if normalizedCallsign == 'nocallsign' or normalizedCallsign == 'none' or normalizedCallsign == 'n/a' then
+                callsign = ''
+            end
             if full ~= '' and callsign ~= '' then return callsign .. ' | ' .. full end
             if full ~= '' then return full end
             if callsign ~= '' then return callsign end

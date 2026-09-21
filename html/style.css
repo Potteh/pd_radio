@@ -467,8 +467,38 @@ html, body {
 }
 .ptt-hint b { color: var(--lcd-amber); }
 
-/* Phase 5 emergency/panic banner */
-.panic-alert { display:none; margin:4px 8px; padding:5px 7px; border:1px solid #ff5a45; background:rgba(105,0,0,.88); color:#fff; font-size:11px; font-weight:700; letter-spacing:.5px; text-align:center; animation:panicPulse .65s infinite alternate; }
-.panic-alert.on { display:flex; align-items:center; justify-content:center; gap:7px; }
-.panic-label { color:#ffd1ca; }
-@keyframes panicPulse { from { opacity:.68; } to { opacity:1; } }
+/* Phase 5 emergency/panic banner
+   Overlay the LCD instead of taking up normal document flow.  The LCD is only
+   92px tall, so a flow-positioned banner was being clipped below the screen. */
+.panic-alert {
+  display: none;
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 3px;
+  z-index: 20;
+  min-height: 20px;
+  padding: 3px 6px;
+  box-sizing: border-box;
+  border: 1px solid #ff5a45;
+  border-radius: 2px;
+  background: rgba(105,0,0,.96);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: .25px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: panicPulse .65s infinite alternate;
+}
+.panic-alert.on {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.panic-label { color:#ffd1ca; flex: 0 0 auto; }
+#panic-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes panicPulse { from { opacity:.78; } to { opacity:1; } }
