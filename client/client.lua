@@ -11,12 +11,13 @@ local preMuteVolume    = radioVolume > 0 and radioVolume or (Config.DefaultRadio
 local savedChannel     = tonumber(GetResourceKvpString('pd_radio_channel'))
 local setChannel
 local QBCore = exports['qb-core']:GetCoreObject()
-local isPolice = false
+local hasAllowedRadioJob = false
 
-local function refreshPoliceJob()
+local function refreshRadioJobAccess()
     local data = QBCore.Functions.GetPlayerData()
-    isPolice = data and data.job and data.job.name == 'police' or false
-    return isPolice
+    local jobName = data and data.job and data.job.name or nil
+    hasAllowedRadioJob = jobName ~= nil and Config.AllowedJobs[jobName] == true
+    return hasAllowedRadioJob
 end
 
 -- ==================================================================
@@ -187,14 +188,15 @@ end
 RegisterNetEvent('pd_radio:powerOff', powerOff)
 
 -- Keep access synchronized with QBCore job changes. If an officer changes
--- away from the police job, immediately disconnect and close the radio.
+-- away from an allowed radio job, immediately disconnect and close the radio.
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    refreshPoliceJob()
+    refreshRadioJobAccess()
 end)
 
 RegisterNetEvent('QBCore:Client:OnJobUpdate', function(job)
-    isPolice = job and job.name == 'police' or false
-    if not isPolice then
+    local jobName = job and job.name or nil
+    hasAllowedRadioJob = jobName ~= nil and Config.AllowedJobs[jobName] == true
+    if not hasAllowedRadioJob then
         if isTransmitting then
             voice_StopRadioTalk()
             voice_SetTransmitting(false)
@@ -204,13 +206,13 @@ RegisterNetEvent('QBCore:Client:OnJobUpdate', function(job)
             radioOpen = false
             SendNUIMessage({ action = 'close' })
         end
-        notify('Police radio access removed.')
+        notify('Emergency services radio access removed.')
     end
 end)
 
 CreateThread(function()
     Wait(1000)
-    refreshPoliceJob()
+    refreshRadioJobAccess()
 end)
 
 -- ==================================================================
@@ -264,8 +266,8 @@ end
 -- ==================================================================
 
 local function openRadio()
-    if not refreshPoliceJob() then
-        notify('Police radio access is restricted to law enforcement.')
+    if not refreshRadioJobAccess() then
+        notify('Radio access is restricted to Police and EMS.')
         return
     end
     if radioOpen then return end
@@ -294,7 +296,7 @@ end, false)
 RegisterKeyMapping('toggleradio', 'Toggle Police Radio', 'keyboard', Config.OpenRadioKey)
 
 RegisterCommand('radiopower', function()
-    if not refreshPoliceJob() then return end
+    if not refreshRadioJobAccess() then return end
     if not radioOpen then return end
     if radioPowered then powerOff() else powerOn() end
 end, false)
@@ -355,7 +357,7 @@ local function stopRadioAnimation()
 end
 
 RegisterCommand('+radioptt', function()
-    if not refreshPoliceJob() then return end
+    if not refreshRadioJobAccess() then return end
     if not radioPowered or not currentChannel then return end
     voice_StartRadioTalk()
     startRadioAnimation()
@@ -496,7 +498,7 @@ end)
 local panicCooldown = false
 
 local function triggerPanic()
-    if not refreshPoliceJob() then return end
+    if not refreshRadioJobAccess() then return end
     if panicCooldown or not radioPowered or not currentChannel then return end
     panicCooldown = true
     TriggerServerEvent('pd_radio:panic')

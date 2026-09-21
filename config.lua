@@ -52,6 +52,7 @@ Config.ChannelDownKey = 'PAGEDOWN'
 -- (server/server.lua) to match your framework (ESX/QBCore/custom).
 Config.AllowedJobs = {
     ['police'] = true,
+    ['ambulance'] = true,
 }
 
 -- =========================================================
