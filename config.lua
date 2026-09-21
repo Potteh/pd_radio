@@ -46,14 +46,12 @@ Config.AllowedJobs = {
 -- encrypted = true just flags it visually + can be gated by job
 -- =========================================================
 Config.Channels = {
-    { id = 1,  name = 'DISPATCH',   freq = '155.475', job = nil,          encrypted = false },
-    { id = 2,  name = 'CHAN 2',     freq = '155.610', job = nil,          encrypted = false },
-    { id = 3,  name = 'CHAN 3',     freq = '155.730', job = nil,          encrypted = false },
-    { id = 4,  name = 'SWAT',       freq = '156.045', job = 'police',     encrypted = true  },
-    { id = 5,  name = 'EMS-1',      freq = '155.340', job = 'ambulance',  encrypted = false },
-    { id = 6,  name = 'FED',        freq = '159.810', job = 'police',     encrypted = true  },
-    { id = 7,  name = 'SUPERVISOR', freq = '154.920', job = 'police',     encrypted = true  },
-    { id = 8,  name = 'TAC-1',      freq = '158.730', job = 'police',     encrypted = false },
+    { id = 1, name = 'STATE DISPATCH', freq = '155.475', job = nil, encrypted = false },
+    { id = 2, name = 'TAC 1',          freq = '155.610', job = nil, encrypted = false },
+    { id = 3, name = 'TAC 2',          freq = '155.730', job = nil, encrypted = false },
+    { id = 4, name = 'TAC 3',          freq = '156.045', job = nil, encrypted = false },
+    { id = 5, name = 'EMS',            freq = '155.340', job = nil, encrypted = false },
+    { id = 6, name = 'HOSPITAL',       freq = '159.810', job = nil, encrypted = false },
 }
 
 -- Radio battery drains over real time while powered on (minutes).

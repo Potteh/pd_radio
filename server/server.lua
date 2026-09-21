@@ -85,12 +85,17 @@ local function GetCharacterDisplayName(src)
     end)
     if ok and QBCore then
         local Player = QBCore.Functions.GetPlayer(tonumber(src))
-        local charinfo = Player and Player.PlayerData and Player.PlayerData.charinfo
+        local pdata = Player and Player.PlayerData
+        local charinfo = pdata and pdata.charinfo
         if charinfo then
             local first = tostring(charinfo.firstname or '')
             local last = tostring(charinfo.lastname or '')
             local full = (first .. ' ' .. last):gsub('^%s+', ''):gsub('%s+$', '')
+            local metadata = pdata.metadata or {}
+            local callsign = tostring(metadata.callsign or ''):gsub('^%s+', ''):gsub('%s+$', '')
+            if full ~= '' and callsign ~= '' then return callsign .. ' | ' .. full end
             if full ~= '' then return full end
+            if callsign ~= '' then return callsign end
         end
     end
     return GetPlayerName(tonumber(src)) or ('UNIT ' .. tostring(src))

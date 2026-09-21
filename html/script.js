@@ -8,6 +8,7 @@
   const signalBars  = document.getElementById('signal-bars');
   const batteryFill = document.getElementById('battery-fill');
   const txBar       = document.getElementById('tx-bar');
+  const txText      = document.getElementById('tx-text');
   const rxBar       = document.getElementById('rx-bar');
   const rxText      = document.getElementById('rx-text');
   const pttOnAudio  = new Audio('sounds/ptt_on.wav');
@@ -114,13 +115,14 @@
         else receiving.delete(id);
         const names = Array.from(receiving.values());
         rxBar.classList.toggle('on', names.length > 0);
-        rxText.textContent = names.length ? `RX: ${names[names.length - 1]}` : 'RECEIVING';
+        rxText.textContent = names.length ? `RX: ${names.join('  •  ')}` : 'RECEIVING';
         break;
       }
 
       case 'setTransmitting':
         txBar.classList.toggle('on', !!data.state);
         micLed.classList.toggle('live', !!data.state);
+        txText.textContent = data.state && data.name ? `TX: ${data.name}` : 'TRANSMITTING';
         break;
     }
   });

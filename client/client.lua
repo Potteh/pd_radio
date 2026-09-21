@@ -4,6 +4,7 @@ local currentChannel   = nil
 local isTransmitting   = false
 local batteryPct       = 100
 local batteryTimer     = nil
+local ownRadioDisplayName = nil
 
 -- ==================================================================
 -- HELPERS
@@ -22,6 +23,12 @@ local function getChannelById(id)
     end
     return nil
 end
+
+
+CreateThread(function()
+    Wait(1500)
+    TriggerServerEvent('pd_radio:requestRxName', GetPlayerServerId(PlayerId()), false)
+end)
 
 -- ==================================================================
 -- VOICE INTEGRATION
@@ -45,7 +52,7 @@ end
 
 local function voice_SetTransmitting(state)
     isTransmitting = state
-    SendNUIMessage({ action = 'setTransmitting', state = state })
+    SendNUIMessage({ action = 'setTransmitting', state = state, name = ownRadioDisplayName })
 end
 
 -- Let pma-voice handle the actual radio transmission. Its +radiotalk /
@@ -266,7 +273,10 @@ end
 RegisterNetEvent('pd_radio:resolvedRxName', function(serverId, displayName, state)
     serverId = tonumber(serverId)
     if not serverId then return end
-    if displayName and displayName ~= '' then rxNameCache[serverId] = displayName end
+    if displayName and displayName ~= '' then
+        rxNameCache[serverId] = displayName
+        if serverId == GetPlayerServerId(PlayerId()) then ownRadioDisplayName = displayName end
+    end
     if not radioPowered or not currentChannel then return end
     SendNUIMessage({
         action = 'setReceiving',
