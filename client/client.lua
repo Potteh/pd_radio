@@ -218,6 +218,17 @@ RegisterCommand('+radioptt', function()
         SendNUIMessage({ action = 'playPTTSound', sound = 'on', volume = Config.CustomPTTVolume or 0.55 })
     end
     voice_SetTransmitting(true)
+
+    -- Show our own transmission in the RX display as well.
+    local myServerId = GetPlayerServerId(PlayerId())
+    local myName = GetPlayerName(PlayerId()) or ('UNIT ' .. tostring(myServerId))
+    SendNUIMessage({
+        action = 'setReceiving',
+        serverId = myServerId,
+        name = myName,
+        state = true
+    })
+
     TriggerServerEvent('pd_radio:startTalking', currentChannel)
 end, false)
 
@@ -228,13 +239,43 @@ RegisterCommand('-radioptt', function()
         SendNUIMessage({ action = 'playPTTSound', sound = 'off', volume = Config.CustomPTTVolume or 0.55 })
     end
     voice_SetTransmitting(false)
+
+    -- Remove only our own entry from RX; any other active receiver stays shown.
+    SendNUIMessage({
+        action = 'setReceiving',
+        serverId = GetPlayerServerId(PlayerId()),
+        state = false
+    })
+
     TriggerServerEvent('pd_radio:stopTalking', currentChannel)
 end, false)
 
 RegisterKeyMapping('+radioptt', 'Radio Push-To-Talk', 'keyboard', Config.PTTKey)
 
 
--- Show who is transmitting on the current radio channel.
+-- RX is driven directly by pma-voice's own synchronized talking event.
+-- This is more reliable than maintaining a second radio-member table in pd_radio.
+RegisterNetEvent('pma-voice:setTalkingOnRadio', function(serverId, state)
+    serverId = tonumber(serverId)
+    if not serverId or serverId == GetPlayerServerId(PlayerId()) then return end
+    if not radioPowered or not currentChannel then return end
+
+    local displayName = ('UNIT %s'):format(serverId)
+    local playerIndex = GetPlayerFromServerId(serverId)
+    if playerIndex and playerIndex ~= -1 then
+        local name = GetPlayerName(playerIndex)
+        if name and name ~= '' then displayName = name end
+    end
+
+    SendNUIMessage({
+        action = 'setReceiving',
+        serverId = serverId,
+        name = displayName,
+        state = state == true
+    })
+end)
+
+-- Legacy fallback for pd_radio's own server relay.
 RegisterNetEvent('pd_radio:rxState', function(serverId, displayName, state)
     if not radioPowered or not currentChannel then return end
     SendNUIMessage({
