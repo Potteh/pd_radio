@@ -356,30 +356,10 @@ local function stopRadioAnimation()
     radioAnimPlaying = false
 end
 
-RegisterCommand('+radioptt', function()
-    if not refreshRadioJobAccess() then return end
-    if not radioPowered or not currentChannel then return end
-    voice_StartRadioTalk()
-    startRadioAnimation()
-    if Config.CustomPTTSounds then
-        SendNUIMessage({ action = 'playPTTSound', sound = 'on', volume = Config.CustomPTTVolume or 0.55 })
-    end
-    voice_SetTransmitting(true)
-    TriggerServerEvent('pd_radio:startTalking', currentChannel)
-end, false)
-
-RegisterCommand('-radioptt', function()
-    if not isTransmitting then return end
-    voice_StopRadioTalk()
-    stopRadioAnimation()
-    if Config.CustomPTTSounds then
-        SendNUIMessage({ action = 'playPTTSound', sound = 'off', volume = Config.CustomPTTVolume or 0.55 })
-    end
-    voice_SetTransmitting(false)
-    TriggerServerEvent('pd_radio:stopTalking', currentChannel)
-end, false)
-
-RegisterKeyMapping('+radioptt', 'Radio Push-To-Talk', 'keyboard', Config.PTTKey)
+-- IMPORTANT: pma-voice owns the radio PTT keybind.
+-- Do not register a second LMENU/+radioptt mapping here: two resources bound to
+-- the same key can race each other and leave pma-voice's Mumble target in the
+-- wrong state. We observe pma-voice:radioActive below for UI/animation only.
 
 -- RX display names are resolved server-side from QBCore character data.
 -- This observes pma-voice only; the working PTT/key-up path above is unchanged.
@@ -427,10 +407,23 @@ RegisterNetEvent('pd_radio:resolvedRxName', function(serverId, displayName, stat
     })
 end)
 
--- Show our own successful transmission in RX using our QBCore character name.
+-- pma-voice is the single owner of PTT. Mirror its confirmed transmission
+-- state into this resource without starting/stopping voice ourselves.
 AddEventHandler('pma-voice:radioActive', function(state)
     if not radioPowered or not currentChannel then return end
-    updateRxWithCharacterName(GetPlayerServerId(PlayerId()), state == true)
+
+    local active = state == true
+    voice_SetTransmitting(active)
+
+    if active then
+        startRadioAnimation()
+        TriggerServerEvent('pd_radio:startTalking', currentChannel)
+    else
+        stopRadioAnimation()
+        TriggerServerEvent('pd_radio:stopTalking', currentChannel)
+    end
+
+    updateRxWithCharacterName(GetPlayerServerId(PlayerId()), active)
 end)
 
 -- Show other transmitters using their QBCore character names.
