@@ -218,9 +218,43 @@ RegisterKeyMapping('radiochandown', 'Radio Channel Down', 'keyboard', Config.Cha
 -- PUSH TO TALK
 -- ==================================================================
 
+-- Radio animation is intentionally separate from voice/PTT logic.
+-- Failure to load/play the animation will never block transmission.
+local radioAnimPlaying = false
+
+local function startRadioAnimation()
+    if Config.RadioAnimation == false or radioAnimPlaying then return end
+
+    local ped = PlayerPedId()
+    if not DoesEntityExist(ped) or IsEntityDead(ped) then return end
+
+    local dict = Config.RadioAnimDict or 'random@arrests'
+    local anim = Config.RadioAnimName or 'generic_radio_chatter'
+
+    RequestAnimDict(dict)
+    local timeout = GetGameTimer() + 2000
+    while not HasAnimDictLoaded(dict) and GetGameTimer() < timeout do
+        Wait(10)
+    end
+    if not HasAnimDictLoaded(dict) then return end
+
+    TaskPlayAnim(ped, dict, anim, 3.0, -3.0, -1, Config.RadioAnimFlag or 49, 0.0, false, false, false)
+    radioAnimPlaying = true
+end
+
+local function stopRadioAnimation()
+    if not radioAnimPlaying then return end
+    local ped = PlayerPedId()
+    local dict = Config.RadioAnimDict or 'random@arrests'
+    local anim = Config.RadioAnimName or 'generic_radio_chatter'
+    StopAnimTask(ped, dict, anim, 2.0)
+    radioAnimPlaying = false
+end
+
 RegisterCommand('+radioptt', function()
     if not radioPowered or not currentChannel then return end
     voice_StartRadioTalk()
+    startRadioAnimation()
     if Config.CustomPTTSounds then
         SendNUIMessage({ action = 'playPTTSound', sound = 'on', volume = Config.CustomPTTVolume or 0.55 })
     end
@@ -231,6 +265,7 @@ end, false)
 RegisterCommand('-radioptt', function()
     if not isTransmitting then return end
     voice_StopRadioTalk()
+    stopRadioAnimation()
     if Config.CustomPTTSounds then
         SendNUIMessage({ action = 'playPTTSound', sound = 'off', volume = Config.CustomPTTVolume or 0.55 })
     end

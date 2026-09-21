@@ -16,6 +16,16 @@ Config.VoiceResource = 'pma-voice'
 Config.OpenRadioKey   = 'M'          -- toggle the radio UI
 Config.PTTKey         = 'LMENU'      -- push-to-talk (default: left alt)
 
+-- =========================================================
+-- PTT RADIO ANIMATION
+-- =========================================================
+-- Plays only while PTT is held. This is isolated from pma-voice, so an
+-- animation failure cannot prevent the radio from transmitting.
+Config.RadioAnimation = true
+Config.RadioAnimDict = 'random@arrests'
+Config.RadioAnimName = 'generic_radio_chatter'
+Config.RadioAnimFlag = 49 -- upper-body/secondary task; allows movement
+
 -- pma-voice's built-in radio mic click / squelch volume (0-100).
 -- These sounds play when radio transmission starts and stops.
 Config.RadioClickOnVolume  = 65
